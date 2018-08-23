@@ -24,7 +24,7 @@ router.post("/login", async function(req,res,next) {
   }
 
   const token = jwt.sign(
-    {username: foundUser.rows[0].email},
+    {email: foundUser.rows[0].email},
     SECRET,
     {
       expiresIn: 60 * 60
@@ -57,7 +57,13 @@ router.post("/", async function (req,res,next) {
     )
     return res.json(result.rows[0])
   }catch(err) {
-    return next(err);
+    if(err.code === '23505') {
+      err.message = "This email is already taken."
+    }
+    return next({
+      status: 500,
+      message: err.message
+    });
   }
 })
 
