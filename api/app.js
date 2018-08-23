@@ -3,7 +3,11 @@ const app = express();
 const bodyParser = require("body-parser");
 const userRoutes = require("./routes/users");
 const morgan = require("morgan");
-const errorHandler = require('./db/handlers/error')
+const errorHandler = require('./db/handlers/error');
+require("dotenv").config();
+
+const PORT = process.env.PORT;
+
 app.use(bodyParser.urlencoded({ extended: true}));
 app.use(bodyParser.json());
 
@@ -18,6 +22,6 @@ app.use(function(req,res,next) {
 
 app.use(errorHandler)
 
-app.listen(3000, function() {
-  console.log("Server started on port 3000")
+app.listen(PORT, function() {
+  console.log(`LISTENING ON PORT ${PORT}`)
 })

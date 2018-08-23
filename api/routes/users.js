@@ -3,8 +3,9 @@ const router = express.Router();
 const db = require("../db");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+require('dotenv').config();
+const SECRET = process.env.SECRET_KEY;
 
-const SECRET = "askdfjsldkfjs";
 
 router.post("/login", async function(req,res,next) {
   try{
