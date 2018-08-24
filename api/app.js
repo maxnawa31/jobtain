@@ -22,6 +22,8 @@ app.use(function(req,res,next) {
 
 app.use(errorHandler)
 
-app.listen(PORT, function() {
-  console.log(`LISTENING ON PORT ${PORT}`)
+const server = app.listen(PORT, function() {
+  // console.log(`LISTENING ON PORT ${PORT}`)
 })
+
+module.exports = server

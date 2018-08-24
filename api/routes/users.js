@@ -71,9 +71,10 @@ router.post("/", async function (req,res,next) {
 router.patch('/:id',ensureCorrectUser, async function(req,res,next) {
   try {
     const hashedPassword = await bcrypt.hash(req.body.password,10);
+    console.log(req.body);
     const result = await db.query(
-      "UPDATE users SET firstname=$1, lastname=$2, username=$3, email=$4, password=$5",
-      [req.body.firstname, req.body.lastname, req.body.username,req.body.email, hashedPassword]
+      `UPDATE users SET firstname=$1, lastname=$2, username=$3, email=$4, password=$5 WHERE id=$6`,
+      [req.body.firstname, req.body.lastname, req.body.username,req.body.email, hashedPassword, req.params.id]
     );
     return res.json(result.rows[0]);
   }catch(err) {
