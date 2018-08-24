@@ -71,9 +71,8 @@ router.post("/", async function (req,res,next) {
 router.patch('/:id',ensureCorrectUser, async function(req,res,next) {
   try {
     const hashedPassword = await bcrypt.hash(req.body.password,10);
-    console.log(req.body);
     const result = await db.query(
-      `UPDATE users SET firstname=$1, lastname=$2, username=$3, email=$4, password=$5 WHERE id=$6`,
+      `UPDATE users SET firstname=$1, lastname=$2, username=$3, email=$4, password=$5 WHERE id=$6 RETURNING *`,
       [req.body.firstname, req.body.lastname, req.body.username,req.body.email, hashedPassword, req.params.id]
     );
     return res.json(result.rows[0]);
@@ -82,4 +81,19 @@ router.patch('/:id',ensureCorrectUser, async function(req,res,next) {
   }
 })
 
+
+router.delete('/:id', ensureCorrectUser, async function(req,res,next) {
+  try{
+    const result = await db.query(
+      "DELETE FROM users WHERE id=$1",
+      [req.params.id]
+    );
+    return res.json({ message:"User deleted" })
+  }catch(err) {
+    return next(err);
+  }
+})
+
 module.exports = router;
+
+
