@@ -5,7 +5,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 require('dotenv').config();
 const SECRET = process.env.SECRET_KEY;
-
+const { ensureCorrectUser } = require('../middleware/auth');
 
 router.post("/login", async function(req,res,next) {
   try{
@@ -25,7 +25,7 @@ router.post("/login", async function(req,res,next) {
   }
 
   const token = jwt.sign(
-    {email: foundUser.rows[0].email},
+    {id: foundUser.rows[0].id},
     SECRET,
     {
       expiresIn: 60 * 60
@@ -65,6 +65,19 @@ router.post("/", async function (req,res,next) {
       status: 500,
       message: err.message
     });
+  }
+})
+
+router.patch('/:id',ensureCorrectUser, async function(req,res,next) {
+  try {
+    const hashedPassword = await bcrypt.hash(req.body.password,10);
+    const result = await db.query(
+      "UPDATE users SET firstname=$1, lastname=$2, username=$3, email=$4, password=$5",
+      [req.body.firstname, req.body.lastname, req.body.username,req.body.email, hashedPassword]
+    );
+    return res.json(result.rows[0]);
+  }catch(err) {
+    return next(err);
   }
 })
 
