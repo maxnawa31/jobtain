@@ -37,8 +37,23 @@ describe("GET /users", () => {
   })
 })
 
-// describe("POST /users", () => {
-//   test("It responds with newly created user", async() => {
-//     const
-//   })
-// })
+describe("POST /users", () => {
+  test("It responds with newly created user", async() => {
+    const newUser = await request(app)
+    .post('/users')
+    .send({
+      firstname:"max",
+      lastname:"nawa",
+      username:'maxnawa',
+      email:'maxnawa@maxnawa.com',
+      password:'jobtain'
+    })
+    expect(newUser.body).toHaveProperty("id");
+    expect(newUser.body).toHaveProperty("email")
+    expect(newUser.body).toHaveProperty("username")
+    expect(newUser.body).toHaveProperty("firstname")
+    expect(newUser.body).toHaveProperty("lastname")
+    expect(newUser.body).toHaveProperty("password")
+    expect(newUser.statusCode).toBe(200);
+  })
+})

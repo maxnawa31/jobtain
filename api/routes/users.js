@@ -56,7 +56,7 @@ router.post("/", async function (req,res,next) {
       "INSERT INTO users (firstname,lastname,username,email,password) VALUES ($1,$2,$3,$4,$5) RETURNING *",
       [req.body.firstname, req.body.lastname, req.body.username,req.body.email,hashedPassword]
     )
-    return res.json(result.rows[0])
+    return res.json(result.rows[0]);
   }catch(err) {
     if(err.code === '23505') {
       err.message = "This email is already taken."
