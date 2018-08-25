@@ -9,29 +9,29 @@ const { ensureCorrectUser } = require('../middleware/auth');
 
 router.post("/login", async function(req,res,next) {
   try{
-  const foundUser = await db.query(
-    "SELECT * FROM users WHERE email=$1 LIMIT 1",
-    [req.body.email]
-  );
-  if(foundUser.rows.length  === 0) {
-    return res.json({message: "Invalid Email"})
-  }
-  const hashedPassword = await bcrypt.compare(
-    req.body.password,
-    foundUser.rows[0].password
-  )
-  if(hashedPassword === false) {
-    return res.json({message: "Invalid Password"});
-  }
-
-  const token = jwt.sign(
-    {id: foundUser.rows[0].id},
-    SECRET,
-    {
-      expiresIn: 60 * 60
+    const foundUser = await db.query(
+      "SELECT * FROM users WHERE email=$1 LIMIT 1",
+      [req.body.email]
+    );
+    if(foundUser.rows.length  === 0) {
+      return res.json({message: "Invalid Email"})
     }
-  );
-  return res.json({token})
+    const hashedPassword = await bcrypt.compare(
+      req.body.password,
+      foundUser.rows[0].password
+    )
+    if(hashedPassword === false) {
+      return res.json({message: "Invalid Password"});
+    }
+
+    const token = jwt.sign(
+      {id: foundUser.rows[0].id},
+      SECRET,
+      {
+        expiresIn: 60 * 60
+      }
+    );
+    return res.json({token})
   } catch(e) {
     return res.json(e)
   }
