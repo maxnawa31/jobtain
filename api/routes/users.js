@@ -50,6 +50,7 @@ router.get("/", async function(req,res,next) {
 })
 
 router.post("/", async function (req,res,next) {
+  console.log(req.body)
   try{
     const hashedPassword = await bcrypt.hash(req.body.password,10);
     const result = await db.query(
@@ -58,6 +59,7 @@ router.post("/", async function (req,res,next) {
     )
     return res.json(result.rows[0]);
   }catch(err) {
+    console.log(err)
     if(err.code === '23505') {
       err.message = "This email is already taken."
     }
@@ -93,6 +95,41 @@ router.delete('/:id', ensureCorrectUser, async function(req,res,next) {
     return next(err);
   }
 })
+
+
+router.post('/:id/add-application', async function(req,res,next) {
+  console.log(req.body.company)
+  try{
+    const result = await db.query(
+      `INSERT INTO APPLICATIONS (user_id,company_id,job_title,location) VALUES(`${req.params.id,${},${req.body.title},${req.body.location}`) RETURNING *`,
+      [req.params.id, req.body.title, req.body.location]
+    )
+    return res.json(result);
+  }catch(err) {
+    console.log(err)
+    return next(err);
+  }
+})
+
+//Get all applications for a specific user
+router.get('/:id/applications', ensureCorrectUser, async function(req,res,next) {
+  try{
+    const result = await db.query(
+      `SELECT job_title,location,u.firstname,c.name FROM applications JOIN users u on applications.user_id=10 AND u.id=${req.params.id} JOIN companies c ON c.id=applications.company_id RETURNING *`,
+      [req.params.id]
+    );
+    return res.json(result)
+  }catch(err) {
+
+  }
+})
+
+
+
+//SELECT u.firstname, c.name AS company_name, a.job_title, a.location FROM users u JOIN applications a ON u.id=a.user_id JOIN companies c ON a.company_id=c.id;
+
+
+
 
 module.exports = router;
 
