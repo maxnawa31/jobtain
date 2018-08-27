@@ -100,11 +100,14 @@ router.delete('/:id', ensureCorrectUser, async function(req,res,next) {
 router.post('/:id/add-application', async function(req,res,next) {
   console.log(req.body.company)
   try{
-    const result = await db.query(
-      `INSERT INTO APPLICATIONS (user_id,company_id,job_title,location) VALUES(`${req.params.id,${},${req.body.title},${req.body.location}`) RETURNING *`,
-      [req.params.id, req.body.title, req.body.location]
+    const company_id = await db.query(
+      `SELECT id FROM Companies WHERE LOWER(Companies.name)=LOWER('${req.body.company}')`
     )
-    return res.json(result);
+    const result = await db.query(
+      "INSERT INTO APPLICATIONS (user_id,company_id,job_title,location) VALUES($1,$2,$3,$4) RETURNING *",
+      [req.params.id, company_id.rows[0].id, req.body.title, req.body.location]
+    )
+    return res.json(result.rows[0]);
   }catch(err) {
     console.log(err)
     return next(err);
@@ -112,13 +115,13 @@ router.post('/:id/add-application', async function(req,res,next) {
 })
 
 //Get all applications for a specific user
-router.get('/:id/applications', ensureCorrectUser, async function(req,res,next) {
+router.get('/:id/applications', async function(req,res,next) {
+  console.log("making query")
   try{
     const result = await db.query(
-      `SELECT job_title,location,u.firstname,c.name FROM applications JOIN users u on applications.user_id=10 AND u.id=${req.params.id} JOIN companies c ON c.id=applications.company_id RETURNING *`,
-      [req.params.id]
+      `SELECT job_title,location,u.firstname,c.name FROM applications JOIN users u on applications.user_id=${req.params.id} AND u.id=${req.params.id} JOIN companies c ON c.id=applications.company_id`
     );
-    return res.json(result)
+    return res.json(result.rows)
   }catch(err) {
 
   }
