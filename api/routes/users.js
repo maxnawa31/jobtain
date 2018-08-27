@@ -7,17 +7,43 @@ require('dotenv').config();
 const SECRET = process.env.SECRET_KEY;
 const { ensureCorrectUser } = require('../middleware/auth');
 
+//sign up a user
+router.post("/", async function (req,res,next) {
+  console.log(req.body)
+  const {firstname,lastname,username,email,password} = req.body
+  try{
+    const hashedPassword = await bcrypt.hash(password,10);
+    const result = await db.query(
+      "INSERT INTO users (firstname,lastname,username,email,password) VALUES ($1,$2,$3,$4,$5) RETURNING *",
+      [firstname, lastname, username,email,hashedPassword]
+    )
+    return res.json(result.rows[0]);
+  }catch(err) {
+    console.log(err)
+    if(err.code === '23505') {
+      err.message = "This email is already taken."
+    }
+    return next({
+      status: 500,
+      message: err.message
+    });
+  }
+})
+
+
+//Login  a user
 router.post("/login", async function(req,res,next) {
+  const {email,password} = req.body
   try{
     const foundUser = await db.query(
       "SELECT * FROM users WHERE email=$1 LIMIT 1",
-      [req.body.email]
+      [email]
     );
     if(foundUser.rows.length  === 0) {
       return res.json({message: "Invalid Email"})
     }
     const hashedPassword = await bcrypt.compare(
-      req.body.password,
+      password,
       foundUser.rows[0].password
     )
     if(hashedPassword === false) {
@@ -38,44 +64,14 @@ router.post("/login", async function(req,res,next) {
 });
 
 
-
-
-router.get("/", async function(req,res,next) {
-  try{
-    const results = await db.query("SELECT * FROM users");
-    return res.json(results.rows);
-  }catch(err) {
-    return next(err);
-  }
-})
-
-router.post("/", async function (req,res,next) {
-  console.log(req.body)
-  try{
-    const hashedPassword = await bcrypt.hash(req.body.password,10);
-    const result = await db.query(
-      "INSERT INTO users (firstname,lastname,username,email,password) VALUES ($1,$2,$3,$4,$5) RETURNING *",
-      [req.body.firstname, req.body.lastname, req.body.username,req.body.email,hashedPassword]
-    )
-    return res.json(result.rows[0]);
-  }catch(err) {
-    console.log(err)
-    if(err.code === '23505') {
-      err.message = "This email is already taken."
-    }
-    return next({
-      status: 500,
-      message: err.message
-    });
-  }
-})
-
+//edit user profile
 router.patch('/:id',ensureCorrectUser, async function(req,res,next) {
+  const {firstname,lastname,username,email,password} = req.body;
   try {
-    const hashedPassword = await bcrypt.hash(req.body.password,10);
+    const hashedPassword = await bcrypt.hash(password,10);
     const result = await db.query(
       `UPDATE users SET firstname=$1, lastname=$2, username=$3, email=$4, password=$5 WHERE id=$6 RETURNING *`,
-      [req.body.firstname, req.body.lastname, req.body.username,req.body.email, hashedPassword, req.params.id]
+      [firstname, lastname, username,email, hashedPassword, req.params.id]
     );
     return res.json(result.rows[0]);
   }catch(err) {
@@ -97,15 +93,18 @@ router.delete('/:id', ensureCorrectUser, async function(req,res,next) {
 })
 
 
+
+//add an application for a user
 router.post('/:id/add-application', async function(req,res,next) {
-  console.log(req.body.company)
+  const {title,company,location} = req.body;
+
   try{
     const company_id = await db.query(
-      `SELECT id FROM Companies WHERE LOWER(Companies.name)=LOWER('${req.body.company}')`
+      `SELECT id FROM Companies WHERE LOWER(Companies.name)=LOWER('${company}')`
     )
     const result = await db.query(
       "INSERT INTO APPLICATIONS (user_id,company_id,job_title,location) VALUES($1,$2,$3,$4) RETURNING *",
-      [req.params.id, company_id.rows[0].id, req.body.title, req.body.location]
+      [req.params.id, company_id.rows[0].id, title, location]
     )
     return res.json(result.rows[0]);
   }catch(err) {
@@ -129,7 +128,7 @@ router.get('/:id/applications', async function(req,res,next) {
 
 
 
-//SELECT u.firstname, c.name AS company_name, a.job_title, a.location FROM users u JOIN applications a ON u.id=a.user_id JOIN companies c ON a.company_id=c.id;
+
 
 
 
