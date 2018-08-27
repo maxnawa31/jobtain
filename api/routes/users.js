@@ -79,7 +79,7 @@ router.patch('/:id',ensureCorrectUser, async function(req,res,next) {
   }
 })
 
-
+//delete user profile
 router.delete('/:id', ensureCorrectUser, async function(req,res,next) {
   try{
     const result = await db.query(
@@ -95,7 +95,7 @@ router.delete('/:id', ensureCorrectUser, async function(req,res,next) {
 
 
 //add an application for a user
-router.post('/:id/add-application', async function(req,res,next) {
+router.post('/:id/add-application',ensureCorrectUser, async function(req,res,next) {
   const {title,company,location} = req.body;
 
   try{
@@ -114,7 +114,7 @@ router.post('/:id/add-application', async function(req,res,next) {
 })
 
 //Get all applications for a specific user
-router.get('/:id/applications', async function(req,res,next) {
+router.get('/:id/applications', ensureCorrectUser, async function(req,res,next) {
   console.log("making query")
   try{
     const result = await db.query(
