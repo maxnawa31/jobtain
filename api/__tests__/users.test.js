@@ -23,20 +23,6 @@ afterAll(async () => {
   db.end();
 })
 
-describe("GET /users", async () => {
-  test("It responds with an array of users", async () => {
-    const response = await request(app).get("/users")
-    expect(response.body.length).toBe(1);
-    expect(response.body[0]).toHaveProperty("id");
-    expect(response.body[0]).toHaveProperty("email")
-    expect(response.body[0]).toHaveProperty("username")
-    expect(response.body[0]).toHaveProperty("firstname")
-    expect(response.body[0]).toHaveProperty("lastname")
-    expect(response.body[0]).toHaveProperty("password")
-    expect(response.statusCode).toBe(200);
-  })
-})
-
 describe("POST /users", async () => {
   test("It responds with newly created user", async () => {
     const newUser = await request(app)
@@ -44,9 +30,9 @@ describe("POST /users", async () => {
       .send({
         firstname: "max",
         lastname: "nawa",
-        username: 'maxnawa',
-        email: 'maxnawa@maxnawa.com',
-        password: 'jobtain'
+        username: "maxnawa",
+        email: "maxnawa@maxnawa.com",
+        password: "jobtain"
       })
     expect(newUser.body).toHaveProperty("id");
     expect(newUser.body).toHaveProperty("email")
@@ -56,7 +42,7 @@ describe("POST /users", async () => {
     expect(newUser.body).toHaveProperty("password")
     expect(newUser.statusCode).toBe(200);
     const response = await request(app)
-      .get('/users')
+      .get("/users")
     expect(response.body.length).toBe(2);
   })
 })
@@ -65,19 +51,19 @@ describe("POST /users", async () => {
 describe("PATCH, /users/5", async () => {
   test("It responds with an updated user", async () => {
     const newUser = await request(app)
-      .post('/users')
+      .post("/users")
       .send({
         firstname: "max",
         lastname: "nawa",
-        username: 'maxnawa',
-        email: 'maxnawa@maxnawa.com',
-        password: 'jobtain'
+        username: "maxnawa",
+        email: "maxnawa@maxnawa.com",
+        password: "jobtain"
       })
     const loggedInUser = await request(app)
-      .post('/users/login')
+      .post("/users/login")
       .send({
-        email: 'maxnawa@maxnawa.com',
-        password: 'jobtain'
+        email: "maxnawa@maxnawa.com",
+        password: "jobtain"
       })
     const updatedUser = await request(app)
       .patch(`users/${loggedInUser.body.id}`)
@@ -87,7 +73,7 @@ describe("PATCH, /users/5", async () => {
         lastname: "nawa",
         username: "username updated",
         email: "email updated",
-        password: 'jobtain'
+        password: "jobtain"
       })
     expect(updatedUser.body.username).toBe("username updated")
     expect(updatedUser.body.email).toBe("email updated")
