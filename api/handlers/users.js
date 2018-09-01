@@ -64,6 +64,7 @@ async function loginUser(req, res, next) {
     return res.json({
       token
     });
+    console.log(res.body)
   } catch (e) {
     return res.json(e);
   }
