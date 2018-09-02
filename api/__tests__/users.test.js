@@ -11,13 +11,8 @@ let auth = {}
 beforeAll(async () => {
   //intialize users table
   await db.query("CREATE TABLE users (id SERIAL PRIMARY KEY, firstname TEXT, lastname TEXT, username TEXT, email TEXT, password TEXT)");
-  // await db.query("CREATE TABLE companies(id SERIAL PRIMARY KEY, name TEXT)");
-
-  await request(app)
-  .post("/comapnies")
-  .send({
-    name:"Facebook"
-  })
+  await db.query("CREATE TABLE companies (id SERIAL PRIMARY KEY, name TEXT)");
+  await db.query("CREATE TABLE applications (id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users (id) ON DELETE CASCADE, company_id INTEGER REFERENCES companies (id) ON DELETE CASCADE, job_title TEXT, location TEXT)");
 
   //sign up a new user
   await request(app)
@@ -52,7 +47,9 @@ beforeAll(async () => {
 })
 
 afterAll(async () => {
-  await db.query("DROP TABLE users");
+  await db.query("DROP TABLE applications cascade");
+  await db.query("DROP TABLE companies cascade");
+  await db.query("DROP TABLE users cascade");
   db.end();
 })
 
@@ -114,7 +111,7 @@ describe("PATCH /users/1", () => {
     })
     let newUser = response.body;
     expect(newUser.username).toBe("philIvey")
-    expect(newUser.email).toBe("philIvey@jobtain.com")
+  expect(newUser.email).toBe("philIvey@jobtain.com")
   })
 })
 
@@ -130,6 +127,9 @@ describe("POST /users/1/applications", () => {
       company:"Facebook",
       location:"New York City"
     })
-    console.log(response.body)
+    let newApplication = response.body
+    expect(newApplication.job_title).toBe("Backend Engineer")
+    expect(newApplication.company_id).toBe(1)
+    expect(newApplication.location).toBe("New York City")
   })
 })
