@@ -11,7 +11,7 @@ let auth = {}
 beforeAll(async () => {
   //intialize users table
   await db.query("CREATE TABLE users (id SERIAL PRIMARY KEY, firstname TEXT, lastname TEXT, username TEXT, email TEXT, password TEXT)");
-  await db.query("CREATE TABLE companies(id SERIAL PRIMARY KEY, name TEXT)");
+  // await db.query("CREATE TABLE companies(id SERIAL PRIMARY KEY, name TEXT)");
 
   await request(app)
   .post("/comapnies")
@@ -118,15 +118,18 @@ describe("PATCH /users/1", () => {
   })
 })
 
-// describe("POST /users/1/applications", () => {
-//   test("It successfully adds an application", async() => {
-//     const response = await request(app)
-//     .post("/users/1/applications")
-//     .set({
-//       "authorization":auth.token
-//     })
-//     .send({
-//       title:""
-//     })
-//   })
-// })
+describe("POST /users/1/applications", () => {
+  test("It successfully adds an application", async() => {
+    const response = await request(app)
+    .post("/users/1/applications")
+    .set({
+      "authorization":auth.token
+    })
+    .send({
+      title:"Backend Engineer",
+      company:"Facebook",
+      location:"New York City"
+    })
+    console.log(response.body)
+  })
+})
