@@ -116,10 +116,10 @@ async function addApplication(req, res, next) {
       `SELECT id FROM Companies WHERE LOWER(Companies.name)=LOWER('${company}')`
     );
     //if not add company
-    if(company_id.rows.length === 0) {
+    if (company_id.rows.length === 0) {
       const new_company = await db.query("INSERT INTO companies (name) VALUES ($1) RETURNING id", [req.body.company])
       result = await db.query('INSERT INTO APPLICATIONS (user_id,company_id,job_title,location) VALUES($1,$2,$3,$4) RETURNING *', [req.params.id, new_company.rows[0].id, title, location])
-    }else {
+    } else {
       result = await db.query(
         'INSERT INTO APPLICATIONS (user_id,company_id,job_title,location) VALUES($1,$2,$3,$4) RETURNING *', [req.params.id, company_id.rows[0].id, title, location]
       );

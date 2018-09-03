@@ -25,7 +25,7 @@ beforeAll(async () => {
       password: "secret"
     });
 
-    //Now log in that user
+  //Now log in that user
   const token = await request(app)
     .post("/users/login")
     .send({
@@ -35,15 +35,15 @@ beforeAll(async () => {
   auth['token'] = token.body.token;
 
   await request(app)
-  .post("/users/1/applications")
-  .set({
-    "authorization":auth.token
-  })
-  .send({
-    title:"Software Enginner",
-    company:"Facebook",
-    location:"Menlo Park"
-  })
+    .post("/users/1/applications")
+    .set({
+      "authorization": auth.token
+    })
+    .send({
+      title: "Software Enginner",
+      company: "Facebook",
+      location: "Menlo Park"
+    })
 })
 
 afterAll(async () => {
@@ -81,14 +81,14 @@ describe("POST /", () => {
 describe("PATCH /users/1", () => {
   test("It throws an error when a token is not provided", async () => {
     const response = await request(app)
-    .patch("/users/1")
-    .send({
-      firstname: "phil",
-      lastname: "ivey",
-      username: "philIvey",
-      email: "philIvey@jobtain.com",
-      password: "secret"
-    })
+      .patch("/users/1")
+      .send({
+        firstname: "phil",
+        lastname: "ivey",
+        username: "philIvey",
+        email: "philIvey@jobtain.com",
+        password: "secret"
+      })
     let errObj = response.body.error;
     let message = errObj.message;
     expect(response.body).toHaveProperty("error");
@@ -97,36 +97,41 @@ describe("PATCH /users/1", () => {
   })
 });
 
+//test for editing user info
 describe("PATCH /users/1", () => {
-  test("It successfully edits user when token is provided", async() => {
+  test("It successfully edits user when token is provided", async () => {
     const response = await request(app)
-    .patch("/users/1")
-    .set({"authorization":auth.token})
-    .send({
-      firstname: "phil",
-      lastname: "ivey",
-      username: "philIvey",
-      email: "philIvey@jobtain.com",
-      password: "secret"
-    })
+      .patch("/users/1")
+      .set({
+        "authorization": auth.token
+      })
+      .send({
+        firstname: "phil",
+        lastname: "ivey",
+        username: "philIvey",
+        email: "philIvey@jobtain.com",
+        password: "secret"
+      })
     let newUser = response.body;
     expect(newUser.username).toBe("philIvey")
-  expect(newUser.email).toBe("philIvey@jobtain.com")
+    expect(newUser.email).toBe("philIvey@jobtain.com")
   })
 })
 
+
+//test for adding an application
 describe("POST /users/1/applications", () => {
-  test("It successfully adds an application", async() => {
+  test("It successfully adds an application", async () => {
     const response = await request(app)
-    .post("/users/1/applications")
-    .set({
-      "authorization":auth.token
-    })
-    .send({
-      title:"Backend Engineer",
-      company:"Facebook",
-      location:"New York City"
-    })
+      .post("/users/1/applications")
+      .set({
+        "authorization": auth.token
+      })
+      .send({
+        title: "Backend Engineer",
+        company: "Facebook",
+        location: "New York City"
+      })
     let newApplication = response.body
     expect(newApplication.job_title).toBe("Backend Engineer")
     expect(newApplication.company_id).toBe(1)
