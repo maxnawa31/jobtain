@@ -150,8 +150,8 @@ async function getSingleApplication(req,res,next) {
 
   }catch(err) {
     return next(err);
+  }
 }
-
 module.exports = {
   signUpUser,
   loginUser,
@@ -159,4 +159,4 @@ module.exports = {
   deleteUser,
   addApplication,
   getAllApplications
-};
+}

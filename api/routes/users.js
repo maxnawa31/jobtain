@@ -33,6 +33,6 @@ router.post('/:id/applications',ensureCorrectUser, addApplication);
 //Get all applications for a specific user
 router.get('/:id/applications', ensureCorrectUser, getAllApplications);
 
-router.get('/:id/applications/:app_id', ensureCorrectUser, getSingleApplication);
+// router.get('/:id/applications/:app_id', ensureCorrectUser, getSingleApplication);
 
 module.exports = router;
