@@ -145,6 +145,13 @@ async function getAllApplications(req, res, next) {
   }
 }
 
+async function getSingleApplication(req,res,next) {
+  try {
+
+  }catch(err) {
+    return next(err);
+}
+
 module.exports = {
   signUpUser,
   loginUser,
