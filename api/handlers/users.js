@@ -121,10 +121,10 @@ async function addApplication(req, res, next) {
       const new_company = await db.query("INSERT INTO companies (name) VALUES ($1) RETURNING id", [req.body.company])
 
       //if status is given in body
-      if(status !== undefined) {
-        result = await db.query('INSERT INTO APPLICATIONS (user_id,company_id,job_title,location,status) VALUES($1,$2,$3,$4,$5) RETURNING *', [req.params.id, new_company.rows[0].id, title, location,status])
-      //if status is not given
-      }else {
+      if (status !== undefined) {
+        result = await db.query('INSERT INTO APPLICATIONS (user_id,company_id,job_title,location,status) VALUES($1,$2,$3,$4,$5) RETURNING *', [req.params.id, new_company.rows[0].id, title, location, status])
+        //if status is not given
+      } else {
         result = await db.query(
           'INSERT INTO APPLICATIONS (user_id,company_id,job_title,location) VALUES($1,$2,$3,$4) RETURNING *', [req.params.id, company_id.rows[0].id, title, location]
         );
@@ -132,12 +132,12 @@ async function addApplication(req, res, next) {
       //else if company exists already
     } else {
       //if status is given
-      if(status !== undefined) {
+      if (status !== undefined) {
         result = await db.query(
-          'INSERT INTO APPLICATIONS (user_id,company_id,job_title,location,status) VALUES($1,$2,$3,$4,$5) RETURNING *', [req.params.id, company_id.rows[0].id, title, location,status]
+          'INSERT INTO APPLICATIONS (user_id,company_id,job_title,location,status) VALUES($1,$2,$3,$4,$5) RETURNING *', [req.params.id, company_id.rows[0].id, title, location, status]
         );
         //if status is not given
-      }else {
+      } else {
         result = await db.query(
           'INSERT INTO APPLICATIONS (user_id,company_id,job_title,location) VALUES($1,$2,$3,$4) RETURNING *', [req.params.id, company_id.rows[0].id, title, location]
         );
@@ -165,10 +165,10 @@ async function getAllApplications(req, res, next) {
   }
 }
 
-async function getSingleApplication(req,res,next) {
+async function getSingleApplication(req, res, next) {
   try {
 
-  }catch(err) {
+  } catch (err) {
     return next(err);
   }
 }
