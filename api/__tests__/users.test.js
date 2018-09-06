@@ -12,7 +12,9 @@ beforeAll(async () => {
   //intialize users table
   await db.query("CREATE TABLE users (id SERIAL PRIMARY KEY, firstname TEXT, lastname TEXT, username TEXT, email TEXT, password TEXT)");
   await db.query("CREATE TABLE companies (id SERIAL PRIMARY KEY, name TEXT)");
-  await db.query("CREATE TABLE applications (id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users (id) ON DELETE CASCADE, company_id INTEGER REFERENCES companies (id) ON DELETE CASCADE, job_title TEXT, location TEXT)");
+  await db.query("CREATE TYPE app_status AS ENUM ('Interested', 'Applied', 'Interview', 'Not A Fit', 'Accepted')")
+  await db.query("CREATE TABLE applications (id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users (id) ON DELETE CASCADE, company_id INTEGER REFERENCES companies (id) ON DELETE CASCADE, job_title TEXT, location TEXT, status app_status)");
+  await db.query("ALTER TABLE ONLY applications ALTER COLUMN status SET DEFAULT 'Interested' ");
 
   //sign up a new user
   await request(app)
@@ -50,6 +52,7 @@ afterAll(async () => {
   await db.query("DROP TABLE applications cascade");
   await db.query("DROP TABLE companies cascade");
   await db.query("DROP TABLE users cascade");
+  await db.query("DROP TYPE app_status")
   db.end();
 })
 
@@ -120,6 +123,7 @@ describe("PATCH /users/1", () => {
 
 
 //test for adding an application
+//also test for if status is not provided
 describe("POST /users/1/applications", () => {
   test("It successfully adds an application", async () => {
     const response = await request(app)
@@ -136,5 +140,28 @@ describe("POST /users/1/applications", () => {
     expect(newApplication.job_title).toBe("Backend Engineer")
     expect(newApplication.company_id).toBe(1)
     expect(newApplication.location).toBe("New York City")
+    expect(newApplication.status).toBe("Interested")
+  })
+})
+
+// test for when status is provided
+describe("POST /users/1/applications", () => {
+  test("It successfully adds an application", async () => {
+    const response = await request(app)
+      .post("/users/1/applications")
+      .set({
+        "authorization": auth.token
+      })
+      .send({
+        title: "Backend Engineer",
+        company: "Facebook",
+        location: "New York City",
+        status: "Applied"
+      })
+    let newApplication = response.body
+    expect(newApplication.job_title).toBe("Backend Engineer")
+    expect(newApplication.company_id).toBe(1)
+    expect(newApplication.location).toBe("New York City")
+    expect(newApplication.status).toBe("Applied")
   })
 })
