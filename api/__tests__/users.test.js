@@ -2,80 +2,139 @@ process.env.NODE_ENV = 'test';
 const db = require('../db');
 const request = require("supertest");
 const app = require("../app");
+const bcrypt = require("bcrypt");
+const jsonwebtoken = require("jsonwebtoken");
+
+
+let auth = {}
 
 beforeAll(async () => {
-  await db.query("CREATE TABLE users(id SERIAL PRIMARY KEY, firstname TEXT, lastname TEXT, username TEXT, email TEXT, password TEXT)")
-})
+  //intialize users table
+  await db.query("CREATE TABLE users (id SERIAL PRIMARY KEY, firstname TEXT, lastname TEXT, username TEXT, email TEXT, password TEXT)");
+  await db.query("CREATE TABLE companies (id SERIAL PRIMARY KEY, name TEXT)");
+  await db.query("CREATE TABLE applications (id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users (id) ON DELETE CASCADE, company_id INTEGER REFERENCES companies (id) ON DELETE CASCADE, job_title TEXT, location TEXT)");
 
-beforeEach(async () => {
-  // seed with some data
-  await db.query("INSERT INTO users (firstname,lastname,username,email,password) VALUES ($1,$2,$3,$4,$5)", ["Max", "Nawa", "mnawa", "mnawa@jobtain.com", "jobtain"]);
+  //sign up a new user
+  await request(app)
+    .post("/users")
+    .send({
+      firstname: "phil",
+      lastname: "ivey",
+      username: "iveyleague",
+      email: "ivey@jobtain.com",
+      password: "secret"
+    });
 
-});
+  //Now log in that user
+  const token = await request(app)
+    .post("/users/login")
+    .send({
+      email: "ivey@jobtain.com",
+      password: "secret"
+    })
+  auth['token'] = token.body.token;
 
-afterEach(async () => {
-  await db.query("DELETE FROM users")
-
+  await request(app)
+    .post("/users/1/applications")
+    .set({
+      "authorization": auth.token
+    })
+    .send({
+      title: "Software Enginner",
+      company: "Facebook",
+      location: "Menlo Park"
+    })
 })
 
 afterAll(async () => {
-  await db.query("DROP TABLE users");
+  await db.query("DROP TABLE applications cascade");
+  await db.query("DROP TABLE companies cascade");
+  await db.query("DROP TABLE users cascade");
   db.end();
 })
 
-describe("POST /users", async () => {
-  test("It responds with newly created user", async () => {
-    const newUser = await request(app)
-      .post('/users')
-      .send({
-        firstname: "max",
-        lastname: "nawa",
-        username: "maxnawa",
-        email: "maxnawa@maxnawa.com",
-        password: "jobtain"
-      })
-    expect(newUser.body).toHaveProperty("id");
-    expect(newUser.body).toHaveProperty("email")
-    expect(newUser.body).toHaveProperty("username")
-    expect(newUser.body).toHaveProperty("firstname")
-    expect(newUser.body).toHaveProperty("lastname")
-    expect(newUser.body).toHaveProperty("password")
-    expect(newUser.statusCode).toBe(200);
+
+//test signing up a new user;
+describe("POST /", () => {
+  test("It signs up a new user", async () => {
     const response = await request(app)
-      .get("/users")
-    expect(response.body.length).toBe(2);
+      .post("/users")
+      .send({
+        firstname: "Max",
+        lastname: "Nawa",
+        username: "maxnawa",
+        email: "max@jobtain.com",
+        password: "secret"
+      });
+    expect(response.body).toHaveProperty("id")
+    expect(response.body).toHaveProperty("firstname")
+    expect(response.body).toHaveProperty("lastname")
+    expect(response.body).toHaveProperty("username")
+    expect(response.body).toHaveProperty("email")
+    expect(response.body).toHaveProperty("password")
+  })
+
+})
+
+//test edit user without token
+
+describe("PATCH /users/1", () => {
+  test("It throws an error when a token is not provided", async () => {
+    const response = await request(app)
+      .patch("/users/1")
+      .send({
+        firstname: "phil",
+        lastname: "ivey",
+        username: "philIvey",
+        email: "philIvey@jobtain.com",
+        password: "secret"
+      })
+    let errObj = response.body.error;
+    let message = errObj.message;
+    expect(response.body).toHaveProperty("error");
+    expect(errObj).toHaveProperty("message")
+    expect(message).toBe("Unauthorized")
+  })
+});
+
+//test for editing user info
+describe("PATCH /users/1", () => {
+  test("It successfully edits user when token is provided", async () => {
+    const response = await request(app)
+      .patch("/users/1")
+      .set({
+        "authorization": auth.token
+      })
+      .send({
+        firstname: "phil",
+        lastname: "ivey",
+        username: "philIvey",
+        email: "philIvey@jobtain.com",
+        password: "secret"
+      })
+    let newUser = response.body;
+    expect(newUser.username).toBe("philIvey")
+    expect(newUser.email).toBe("philIvey@jobtain.com")
   })
 })
 
 
-describe("PATCH, /users/5", async () => {
-  test("It responds with an updated user", async () => {
-    const newUser = await request(app)
-      .post("/users")
-      .send({
-        firstname: "max",
-        lastname: "nawa",
-        username: "maxnawa",
-        email: "maxnawa@maxnawa.com",
-        password: "jobtain"
+//test for adding an application
+describe("POST /users/1/applications", () => {
+  test("It successfully adds an application", async () => {
+    const response = await request(app)
+      .post("/users/1/applications")
+      .set({
+        "authorization": auth.token
       })
-    const loggedInUser = await request(app)
-      .post("/users/login")
       .send({
-        email: "maxnawa@maxnawa.com",
-        password: "jobtain"
+        title: "Backend Engineer",
+        company: "Facebook",
+        location: "New York City"
       })
-    const updatedUser = await request(app)
-      .patch(`users/${loggedInUser.body.id}`)
-      .set("authorization", loggedInUser.body.token)
-      .send({
-        firstname: "max",
-        lastname: "nawa",
-        username: "username updated",
-        email: "email updated",
-        password: "jobtain"
-      })
-    expect(updatedUser.body.username).toBe("username updated")
-    expect(updatedUser.body.email).toBe("email updated")
+    let newApplication = response.body
+    expect(newApplication.job_title).toBe("Backend Engineer")
+    expect(newApplication.company_id).toBe(1)
+    expect(newApplication.location).toBe("New York City")
   })
 })
