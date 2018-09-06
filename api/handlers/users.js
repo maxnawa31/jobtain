@@ -153,7 +153,7 @@ async function addApplication(req, res, next) {
 async function getAllApplications(req, res, next) {
   try {
     const result = await db.query(
-      `SELECT job_title,location,u.firstname,c.name FROM applications JOIN users u on applications.user_id=${
+      `SELECT job_title AS title,location, status, u.firstname,c.name AS company FROM applications JOIN users u on applications.user_id=${
         req.params.id
       } AND u.id=${
         req.params.id
