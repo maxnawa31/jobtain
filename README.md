@@ -5,7 +5,7 @@ Job tracker for job seekers.
 ### Set up
 Database setup 
 
-```
+```sql
 DROP DATABASE IF EXISTS jobtain;
 
 CREATE DATABASE jobtain;
