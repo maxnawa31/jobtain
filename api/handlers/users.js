@@ -153,7 +153,7 @@ async function addApplication(req, res, next) {
 async function getAllApplications(req, res, next) {
   try {
     const result = await db.query(
-      `SELECT job_title,location,u.firstname,c.name FROM applications JOIN users u on applications.user_id=${
+      `SELECT applications.id,job_title AS title,location, status, u.firstname,c.name AS company FROM applications JOIN users u on applications.user_id=${
         req.params.id
       } AND u.id=${
         req.params.id
@@ -167,7 +167,11 @@ async function getAllApplications(req, res, next) {
 
 async function getSingleApplication(req, res, next) {
   try {
-
+    const job = await db.query(`SELECT company_id, job_title as title, location, status from APPLICATIONS WHERE id=${req.params.app_id}`)
+    const companyId = job.rows[0]['company_id'];
+    const company = await db.query(`SELECT name as company_name FROM companies WHERE id=${companyId}`);
+    const result = {...job.rows[0], ...company.rows[0]};
+    return res.json(result);
   } catch (err) {
     return next(err);
   }
@@ -178,5 +182,6 @@ module.exports = {
   editUser,
   deleteUser,
   addApplication,
-  getAllApplications
+  getAllApplications,
+  getSingleApplication
 }
