@@ -173,7 +173,7 @@ async function getSingleApplication(req, res, next) {
     const result = {...job.rows[0], ...company.rows[0]};
     return res.json(result);
   } catch (err) {
-    return next(err);
+      return next(err);
   }
 }
 module.exports = {
