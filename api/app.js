@@ -14,7 +14,7 @@ app.use(bodyParser.urlencoded({
   extended: true
 }));
 app.use(bodyParser.json());
-
+app.use(cors())
 app.use(morgan("tiny"));
 app.use("/users", userRoutes);
 app.use("/companies", companyRoutes)
