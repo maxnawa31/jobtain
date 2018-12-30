@@ -2,8 +2,9 @@ const jwt = require('jsonwebtoken');
 require('dotenv').load();
 exports.ensureCorrectUser = function (req, res, next) {
   try {
-    const token = req.headers.authorization.split(' ')[0];
-    const auth = jwt.verify(req.headers.authorization, process.env.SECRET_KEY);
+    console.log(req.headers.authorization)
+    const token = req.headers.authorization.split(' ')[1];
+    console.log(token)
     jwt.verify(token, process.env.SECRET_KEY, function (err, decoded) {
       if (decoded && decoded.id === parseInt(req.params.id)) {
         return next();
