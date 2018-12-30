@@ -23,11 +23,24 @@ async function addQuestion (req,res,next) {
   }
 }
 
+
+async function getOneQuestion(req,res,next) {
+  let questionId = req.params.question_id;
+  try {
+    const result = await db.query(
+      `SELECT job_title, question, description, phase FROM questions WHERE id=${questionId}`
+    )
+    return res.json(result.rows[0]);
+  }catch(err) {
+    return next(err);
+  }
+}
+
 async function getAllQuestions(req,res,next) {
   let companyId = req.params.company_id;
   try {
     const result = await db.query(
-      `SELECT job_title, question, description, phase from questions where company_id=${companyId}`
+      `SELECT job_title, question, description, phase FROM questions where company_id=${companyId}`
     )
     return res.json(result.rows);
   }catch(err) {
@@ -37,5 +50,6 @@ async function getAllQuestions(req,res,next) {
 
 module.exports = {
   addQuestion,
+  getOneQuestion,
   getAllQuestions
 }

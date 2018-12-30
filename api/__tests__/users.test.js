@@ -153,15 +153,30 @@ describe("POST /users/1/applications", () => {
         "authorization": auth.token
       })
       .send({
-        title: "Backend Engineer",
+        title: "Frontend Engineer",
         company: "Facebook",
         location: "New York City",
         status: "Applied"
       })
     let newApplication = response.body
-    expect(newApplication.job_title).toBe("Backend Engineer")
+    expect(newApplication.job_title).toBe("Frontend Engineer")
     expect(newApplication.company_id).toBe(1)
     expect(newApplication.location).toBe("New York City")
     expect(newApplication.status).toBe("Applied")
+  })
+})
+
+//test for getting all applications for a user
+describe("GET /users/1/applications", () => {
+  test("It successfully gets all of user's applications", async () => {
+    const response = await request(app)
+    .get("/users/1/applications")
+    .set({
+      "authorization" : auth.token
+    })
+    let allApplications = response.body;
+    expect(allApplications).toHaveLength(2);
+    expect(allApplications[0].title).toBe("Backend Engineer")
+    expect(allApplications[1].title).toBe("Frontend Engineer")
   })
 })
