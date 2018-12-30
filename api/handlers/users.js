@@ -64,6 +64,7 @@ async function loginUser(req, res, next) {
     return res.json({
       token
     });
+    console.log(res.body)
   } catch (e) {
     return res.json(e);
   }
@@ -105,16 +106,44 @@ async function addApplication(req, res, next) {
   const {
     title,
     company,
-    location
+    location,
+    status
   } = req.body;
 
   try {
+    let result;
+    //check if company already exists in database
     const company_id = await db.query(
       `SELECT id FROM Companies WHERE LOWER(Companies.name)=LOWER('${company}')`
     );
-    const result = await db.query(
-      'INSERT INTO APPLICATIONS (user_id,company_id,job_title,location) VALUES($1,$2,$3,$4) RETURNING *', [req.params.id, company_id.rows[0].id, title, location]
-    );
+    //if company doesnt exist, add it
+    if (company_id.rows.length === 0) {
+      const new_company = await db.query("INSERT INTO companies (name) VALUES ($1) RETURNING id", [req.body.company])
+
+      //if status is given in body
+      if (status !== undefined) {
+        result = await db.query('INSERT INTO APPLICATIONS (user_id,company_id,job_title,location,status) VALUES($1,$2,$3,$4,$5) RETURNING *', [req.params.id, new_company.rows[0].id, title, location, status])
+        //if status is not given
+      } else {
+        result = await db.query(
+          'INSERT INTO APPLICATIONS (user_id,company_id,job_title,location) VALUES($1,$2,$3,$4) RETURNING *', [req.params.id, company_id.rows[0].id, title, location]
+        );
+      }
+      //else if company exists already
+    } else {
+      //if status is given
+      if (status !== undefined) {
+        result = await db.query(
+          'INSERT INTO APPLICATIONS (user_id,company_id,job_title,location,status) VALUES($1,$2,$3,$4,$5) RETURNING *', [req.params.id, company_id.rows[0].id, title, location, status]
+        );
+        //if status is not given
+      } else {
+        result = await db.query(
+          'INSERT INTO APPLICATIONS (user_id,company_id,job_title,location) VALUES($1,$2,$3,$4) RETURNING *', [req.params.id, company_id.rows[0].id, title, location]
+        );
+      }
+
+    }
     return res.json(result.rows[0]);
   } catch (err) {
     return next(err);
@@ -124,7 +153,7 @@ async function addApplication(req, res, next) {
 async function getAllApplications(req, res, next) {
   try {
     const result = await db.query(
-      `SELECT job_title,location,u.firstname,c.name FROM applications JOIN users u on applications.user_id=${
+      `SELECT applications.id,job_title AS title,location, status, u.firstname,c.name AS company FROM applications JOIN users u on applications.user_id=${
         req.params.id
       } AND u.id=${
         req.params.id
@@ -136,11 +165,23 @@ async function getAllApplications(req, res, next) {
   }
 }
 
+async function getSingleApplication(req, res, next) {
+  try {
+    const job = await db.query(`SELECT company_id, job_title as title, location, status from APPLICATIONS WHERE id=${req.params.app_id}`)
+    const companyId = job.rows[0]['company_id'];
+    const company = await db.query(`SELECT name as company_name FROM companies WHERE id=${companyId}`);
+    const result = {...job.rows[0], ...company.rows[0]};
+    return res.json(result);
+  } catch (err) {
+      return next(err);
+  }
+}
 module.exports = {
   signUpUser,
   loginUser,
   editUser,
   deleteUser,
   addApplication,
-  getAllApplications
-};
+  getAllApplications,
+  getSingleApplication
+}
