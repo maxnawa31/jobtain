@@ -17,7 +17,7 @@ async function signUpUser(req, res, next) {
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
     const result = await db.query(
-      'INSERT INTO users (firstname,lastname,username,email,password) VALUES ($1,$2,$3,$4,$5) RETURNING *', [firstname, lastname, username, email, hashedPassword]
+      'INSERT INTO users (firstname,lastname,username,email,password) VALUES ($1,$2,$3,$4,$5) RETURNING firstname,username,email', [firstname, lastname, username, email, hashedPassword]
     );
     return res.json(result.rows[0]);
   } catch (err) {
@@ -36,20 +36,22 @@ async function loginUser(req, res, next) {
     email,
     password
   } = req.body;
-  console.log(email, password)
+
   try {
     const foundUser = await db.query(
       'SELECT * FROM users WHERE email=$1 LIMIT 1', [email]
     );
     if (foundUser.rows.length === 0) {
-      await Promise.reject(new Error('Invalid Email or Password'))
+      //user not found
+      return next(new Error('Invalid Email or Password'))
     }
     const hashedPassword = await bcrypt.compare(
       password,
       foundUser.rows[0].password
     );
     if (hashedPassword === false) {
-      await Promise.reject(new Error('Invalid Email or Password'))
+      //invalid password
+      return next('Invalid Email or Password')
     }
 
     const token = jwt.sign({
@@ -63,8 +65,8 @@ async function loginUser(req, res, next) {
       token,
       id: foundUser.rows[0].id
     });
-  } catch (e) {
-    return next(e);
+  } catch (err) {
+    return next(err);
   }
 }
 
@@ -122,7 +124,7 @@ async function addApplication(req, res, next) {
 
       const new_company = await db.query("INSERT INTO companies (name) VALUES ($1) RETURNING id", [req.body.company])
 
-      if (status !== undefined) {
+      if (status !== '') {
         result = await db.query('INSERT INTO APPLICATIONS (user_id,company_id,job_title,location,status) VALUES($1,$2,$3,$4,$5) RETURNING *', [req.params.id, new_company.rows[0].id, title, location, status])
         //if status is not given
         return res.json(result.rows[0])
@@ -137,7 +139,7 @@ async function addApplication(req, res, next) {
     } else {
 
       //if status is given
-      if (status !== undefined) {
+      if (status !== '') {
         result = await db.query(
           'INSERT INTO APPLICATIONS (user_id,company_id,job_title,location,status) VALUES($1,$2,$3,$4,$5) RETURNING *', [req.params.id, company_id.rows[0].id, title, location, status]
         );
